@@ -50,12 +50,12 @@ conf_lev = 1 - 2 * psignrank(k, n)
 print(conf_lev)
 
 # walsh averages
-w = outer(apples, apples, "+") / 2
-w = w[lower.tri(w, diag=TRUE)]
+w = outer(apples, apples, "+") / 2 # create matrix
+w = w[lower.tri(w, diag=TRUE)] # get matrix triangular structure
 w = sort(w)
 
-# k = 4, conf_lev = 0.9453
-k = 4
+# k = 3, conf_lev = 0.9609375
+k = 3
 n = length(apples)
 m = n * (n + 1) / 2
 interval = c(w[k + 1], w[m - k])
