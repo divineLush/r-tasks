@@ -44,9 +44,12 @@ print(wilcox.test(apples, conf.int=TRUE))
 n = length(apples)
 m = n * (n + 1) / 2
 k = 1:(m / 2)
+# psignrank - distribution function of the wilcoxon signed rank statistic
+# confidence intervals have the form (W(k+1), W(m-k))
 conf_lev = 1 - 2 * psignrank(k, n)
-print(round(conf_lev[0.80 < conf_lev & conf_lev < 0.995], 4))
+print(conf_lev)
 
+# walsh averages
 w = outer(apples, apples, "+") / 2
 w = w[lower.tri(w, diag=TRUE)]
 w = sort(w)
