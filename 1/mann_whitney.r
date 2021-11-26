@@ -59,10 +59,5 @@ k = 3
 n = length(apples)
 m = n * (n + 1) / 2
 interval = c(w[k + 1], w[m - k])
-print("interval")
-print(interval)
 
 conf_lev = 1 - 2 * psignrank(k, n)
-print("confidence level")
-print(conf_lev)
-

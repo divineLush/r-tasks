@@ -14,13 +14,12 @@ fisher_scoring = function(y, x) {
     beta[,1] = runif(ncol(x))
 
     for (i in 1:(n - 1)) {
-        # canonical link function
         theta[,i] = x %*% as.matrix(beta[,i])
         mu[,i] = exp(as.matrix(theta[,i])) / (1 + exp(as.matrix(theta[,i])))
         w = diag(as.vector(mu[,i] * (1 - mu[,i])))
 
         beta_i = as.matrix(beta[,i])
-        inf = solve(t(x)%*% w %*% x) %*% t(x)
+        inf = solve(t(x) %*% w %*% x) %*% t(x)
         score = y - as.matrix(mu[,i])
 
         beta[,i+1] = beta_i + inf %*% score
