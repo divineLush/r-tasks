@@ -13,17 +13,16 @@ print(dataset)
 
 values = dataset$circumference
 
-wilcox_test = wilcox.test(values, mu=25)
-print(wilcox_test)
+print(wilcox.test(values, mu=25))
 # p-value=0.001953 => p-value is less than the significance level alpha=0.05
 # reject null hypothesis => average head circumference is different from 25
 
-wilcox_test = wilcox.test(values, mu=46)
-print(wilcox_test)
+print(wilcox.test(values, mu=46))
 # p-value=0.2324 => accept null hypothesis
 
-wilcox_test = wilcox.test(values, correct = TRUE)
-print(wilcox_test)
+print(wilcox.test(values))
+
+custom_wilcox_data = rnorm(100, 0, 1)
 
 custom_wilcox = function(data) {
     rank = sort(abs(data), decreasing = FALSE)
@@ -44,8 +43,8 @@ custom_wilcox = function(data) {
 
 writeLines("\n><> ><> ><> ><> ><> ><> ><> ><> ><> ><>\n")
 
-print(wilcox_test$p.value)
-print(custom_wilcox(values))
+print(wilcox.test(custom_wilcox_data)$p.value)
+print(custom_wilcox(custom_wilcox_data))
 
 # PAIRED SAMPLES WILCOXON TEST
 
