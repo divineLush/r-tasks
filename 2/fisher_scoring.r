@@ -30,3 +30,16 @@ fisher_scoring = function(y, x) {
 
 fisher = fisher_scoring(y,x)
 print(fisher)
+
+writeLines("\n><> ><> ><> ><> ><> ><> ><> ><> ><> ><>\n")
+
+theta_mle = x %*% as.matrix(fisher[, 20])
+mu_mle = exp(as.matrix(theta_mle)) / (1 + exp(as.matrix(theta_mle)))
+w_mle = diag(as.vector(mu_mle * (1 - mu_mle)))
+se = sqrt(solve(t(x) %*% w_mle %*% x))
+
+print(se)
+
+dataset = data.frame(x = x, y = y)
+g = glm(y ~ x, data = dataset, family="binomial")
+print(g$coefficients)
