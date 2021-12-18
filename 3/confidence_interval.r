@@ -15,97 +15,84 @@
 
 library(survival)
 
-ti_raw = c(lung$time)
+df = aml[order(aml$time), 1:2]
+df_dead = df[df$status == 1, ]
 
-ti = ti_raw[!duplicated(ti_raw)]
-ti = sort(ti)
-
-ni = c()
+ti = unique(df$time, 1)
 di = c()
+ni = c()
 
-ti_len = length(ti)
+for (t in ti) {
+    di = c(di, length(df_dead[(df_dead$time == t), 1]))
+    ni = c(ni, length(df[df$time >= t, 1]))
+}
 
-for (i in 1:(ti_len)) {
-    # number of patients alive before times[i] or dead at times[i]
-    n = 0
-    # number of patients who died at times[i]
-    d = 0
+# Kaplan-Meier estimator of the survival function
+st = c()
+for (i in 1:(length(ti))) {
+    to_add = 1
 
-    cur = ti[i]
-    for (raw in ti_raw) {
-        if (cur <= raw) {
-            n = n + 1
-        }
-
-        if (cur == raw) {
-            d = d + 1
+    for (j in 1:length(ti)) {
+        if (ti[j] <= ti[i]) {
+            to_add = to_add * (1 - di[j] / ni[j])
+            # print(c(di[j], ni[j]))
         }
     }
 
-    ni[i] = n
-    di[i] = d
+    st = c(st, to_add)
 }
 
-# filter ti and return result length
-filt_len = function(t) {
-    return (length(ti[ti <= t]) )
+sum = c()
+for (i in 1:length(ti)) {
+    to_add = 0
+    for (j in 1:length(ti)) {
+        if (ti[j] <= ti[i]) {
+            to_add = to_add + di[j] / ni[j] / (ni[j] - di[j])
+        }
+    }
+
+    sum = c(sum, to_add)
 }
 
-# Kaplen-Meier estimator of the survival function
-st = function(t) {
-    fl = filt_len(t)
-
-    mult = rep(1, fl) - di[1:fl] / ni[1:fl]
-    mult = mult[mult != 0]
-
-    return (prod(mult))
+d = c()
+for (i in 1:length(st)) {
+    d = c(d, ((st[i] ^ 2) * sum[i]))
 }
 
-sum_helper = function(t) {
-    fl = filt_len(t)
+z = qnorm(1 - .05 / 2)
 
-    di_slice = di[1:fl]
-    ni_slice = ni[1:fl]
-
-    d = di_slice / (ni_slice * (ni_slice - di_slice))
-    d = d[d != Inf]
-
-    return (sum(d))
+# (1- alpha) * 100% Greenwood plain ci
+ci_low = c()
+ci_up = c()
+d_sqrt = sqrt(d)
+for (i in 1:length(st)) {
+    ci_low = c(ci_low, st[i] - z * d_sqrt[i])
+    ci_up = c(ci_up, st[i] + z * d_sqrt[i])
 }
 
-d_st = function(t) {
-    return ((st(t) ^ 2) * sum_helper(t))
+# log-log ci
+dz = c()
+ci_low_log = c()
+ci_up_log = c()
+for (i in 1:length(st)) {
+    dz = c(dz, (1 / (log(st[i]) ^ 2)) * sum[i])
+
+    log_st = log(-log(st[i]))
+    dz_sqrt = sqrt(dz[i])
+
+    c_minus = log_st - z * dz_sqrt
+    c_plus = log_st + z * dz_sqrt
+
+    ci_low_log = c(ci_low_log, exp(-exp(c_plus)))
+    ci_up_log = c(ci_up_log, exp(-exp(c_minus)))
 }
 
-# Greenwood's 95% confidence interval for st(t)
-g_ci = function(t) {
-    s = st(t)
-    stderr = 1.96 * sqrt(d_st(t))
+writeLines("\n><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><>\n")
 
-    return (c(s - stderr, s + stderr))
-}
+print("plain:")
+print(cbind(ci_low, ci_up))
 
-# log-log 95% confidence interval
-log_ci = function(t) {
-    s = st(t)
-    sqrt_v = sqrt(sum_helper(t) / ((log(s)) ^ 2))
+writeLines("\n><> ><> ><> ><> ><> ><> ><> ><> ><> ><> ><>\n")
 
-    log_s = log(-log(s))
-    z = qnorm(.95)
-    z_by_sqrt_v = sqrt_v * z
-
-    c_plus = log_s + z_by_sqrt_v
-    c_minus = log_s - z_by_sqrt_v
-
-    return (c(exp(-exp(c_plus)), exp(-exp(c_minus))))
-}
-
-for (t in ti) {
-    print(g_ci(t))
-}
-
-writeLines("\n><> ><> ><> ><> ><> ><> ><> ><> ><> ><>\n")
-
-for (t in ti) {
-    print(log_ci(t))
-}
+print("log-log:")
+print(cbind(ci_low_log, ci_up_log))
